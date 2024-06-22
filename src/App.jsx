@@ -1,104 +1,48 @@
 import { useEffect, useState } from "react";
 import Login from "./components/Login";
-import client from "./components/client";
 import Admin from "./components/Admin";
 import Kasir from "./components/Kasir";
 import Pembeli from "./components/Pembeli";
-// import './App.css'
+import { useDispatch, useSelector } from "react-redux";
+import { setBarang } from "./redux/barangSlice";
+import {
+  useGetBarangQuery,
+  useGetKategoriQuery,
+  useGetMerkQuery,
+  useGetUserQuery,
+} from "./redux/api";
+import { setKategori } from "./redux/kategoriSlice";
+import { setMerk } from "./redux/merkSlice";
+import { setUsers } from "./redux/userSlice";
 
 function App() {
-  const [route, setRoute] = useState("login");
   const [isLoading, setIsLoading] = useState(false);
-  const [users, setUsers] = useState([]);
-  const [id, setId] = useState(-1);
-  const [barang, setBarang] = useState([]);
-  const [categories, setCategories] = useState([]);
-  const [brands, setBrands] = useState([]);
-  const [cart, setCart] = useState([]);
-  const [transaction, setTransaction] = useState([]);
 
-  const fetchUsers = async () => {
-    setIsLoading(true);
-    const getUser = await client.get("/users");
-    setUsers(getUser.data);
-    setIsLoading(false);
-  };
+  const route = useSelector((state) => state.route.route);
+  const dispatch = useDispatch();
 
-  const fetchItems = async () => {
-    setIsLoading(true);
-    const getItems = await client.get("/barang");
-    setBarang(getItems.data);
-    setIsLoading(false);
-  };
-
-  const fetchCategories = async () => {
-    setIsLoading(true);
-    const getCategories = await client.get("/kategori");
-    setCategories(getCategories.data);
-    setIsLoading(false);
-  };
-
-  const fetchBrands = async () => {
-    setIsLoading(true);
-    const getBrands = await client.get("/merk");
-    setBrands(getBrands.data);
-    setIsLoading(false);
-  };
+  const dataUser = useGetUserQuery().data;
+  const dataBarang = useGetBarangQuery().data;
+  const dataKategori = useGetKategoriQuery().data;
+  const dataMerk = useGetMerkQuery().data;
 
   useEffect(() => {
-    fetchUsers();
-    fetchItems();
-    fetchCategories();
-    fetchBrands();
-  }, []);
+    setIsLoading(true);
+
+    dispatch(setUsers(dataUser));
+    dispatch(setBarang(dataBarang));
+    dispatch(setKategori(dataKategori));
+    dispatch(setMerk(dataMerk));
+
+    setIsLoading(false);
+  }, [dataUser, dataBarang, dataKategori, dataMerk, dispatch]);
 
   return (
     <>
-      {route == "login" && isLoading == false && (
-        <Login users={users} id={id} setId={setId} setRoute={setRoute}></Login>
-      )}
-      {route == "admin" && isLoading == false && (
-        <Admin
-          users={users}
-          id={id}
-          setId={setId}
-          setRoute={setRoute}
-          barang={barang}
-          setBarang={setBarang}
-          categories={categories}
-          brands={brands}
-          setCart={setCart}
-        ></Admin>
-      )}
-      {route == "PEMBELI" && isLoading == false && (
-        <Pembeli
-          users={users}
-          id={id}
-          setId={setId}
-          setRoute={setRoute}
-          barang={barang}
-          setBarang={setBarang}
-          categories={categories}
-          brands={brands}
-          cart={cart}
-          setCart={setCart}
-          transaction={transaction}
-          setTransaction={setTransaction}
-        ></Pembeli>
-      )}
-      {route == "KASIR" && isLoading == false && (
-        <Kasir
-          users={users}
-          id={id}
-          setId={setId}
-          setRoute={setRoute}
-          setCart={setCart}
-          barang={barang}
-          setBarang={setBarang}
-          transaction={transaction}
-          setTransaction={setTransaction}
-        ></Kasir>
-      )}
+      {route == "login" && isLoading == false && <Login></Login>}
+      {route == "admin" && isLoading == false && <Admin></Admin>}
+      {route == "PEMBELI" && isLoading == false && <Pembeli></Pembeli>}
+      {route == "KASIR" && isLoading == false && <Kasir></Kasir>}
     </>
   );
 }

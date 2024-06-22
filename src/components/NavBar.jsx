@@ -1,9 +1,28 @@
+import { useDispatch, useSelector } from "react-redux";
+import {
+  setRoute,
+  setId,
+  setRoutePembeli,
+  setRouteKasir,
+  setRouteAdmin,
+  setActive,
+} from "../redux/routeSlice";
+import { setCart } from "../redux/cartSlice";
+
 /* eslint-disable react/prop-types */
-function Navbar(props) {
+function Navbar() {
+  const id = useSelector((state) => state.route.id);
+  const users = useSelector((state) => state.user.listUser);
+  const dispatch = useDispatch();
+
   const logout = () => {
-    props.setId(-1);
-    props.setRoute("login");
-    props.setCart([]);
+    dispatch(setId(-1));
+    dispatch(setRoute("login"));
+    dispatch(setCart([]));
+    dispatch(setRouteAdmin("list"));
+    dispatch(setRoutePembeli("list"));
+    dispatch(setRouteKasir("home"));
+    dispatch(setActive(null));
   };
 
   const capitalizeWords = (word) => {
@@ -14,10 +33,10 @@ function Navbar(props) {
   };
 
   let user = "";
-  if (props.id == -1) {
-    user = { id: props.id, username: "admin", role: "admin" };
+  if (id == -1) {
+    user = { id: id, username: "admin", role: "admin" };
   } else {
-    user = props.users.find((u) => u.id == props.id);
+    user = users.find((u) => u.id == id);
   }
 
   return (

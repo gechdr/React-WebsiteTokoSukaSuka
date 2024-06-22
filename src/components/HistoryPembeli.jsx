@@ -1,22 +1,32 @@
 import { useEffect, useState } from "react";
 import ListHistory from "./ListHistory";
+import { useDispatch, useSelector } from "react-redux";
+import { setRoutePembeli } from "../redux/routeSlice";
+import DetailTransaction from "./DetailTransaction";
 
 /* eslint-disable react/prop-types */
-function HistoryPembeli(props) {
+function HistoryPembeli() {
   const [isLoading, setIsLoading] = useState(false);
   const [userTransaction, setUserTransaction] = useState([]);
+
+  const id = useSelector((state) => state.route.id);
+  const transactions = useSelector(
+    (state) => state.transaction.listTransaction
+  );
+  const routeHistoryPembeli = useSelector(
+    (state) => state.route.routeHistoryPembeli
+  );
+  const dispatch = useDispatch();
 
   useEffect(() => {
     setIsLoading(true);
 
-    setUserTransaction([
-      ...props.transaction.filter((t) => t.idPembeli == props.id),
-    ]);
+    setUserTransaction([...transactions.filter((t) => t.idPembeli == id)]);
 
     setTimeout(() => {
       setIsLoading(false);
     }, 1000);
-  }, [props.id, props.transaction]);
+  }, [id, transactions]);
 
   return (
     <>
@@ -28,14 +38,14 @@ function HistoryPembeli(props) {
           <button
             className="border-0 rounded-3 fs-4 w-25 mx-3 text-white py-1"
             style={{ backgroundColor: "#7c2023" }}
-            onClick={() => props.setRoutePembeli("list")}
+            onClick={() => dispatch(setRoutePembeli("list"))}
           >
             List
           </button>
           <button
             className="border-0 rounded-3 fs-4 w-25 mx-3 text-white py-1"
             style={{ backgroundColor: "#7c2023" }}
-            onClick={() => props.setRoutePembeli("cart")}
+            onClick={() => dispatch(setRoutePembeli("cart"))}
           >
             Cart
           </button>
@@ -50,8 +60,11 @@ function HistoryPembeli(props) {
           </div>
         )}
 
-        {isLoading == false && (
+        {isLoading == false && routeHistoryPembeli == "list" && (
           <ListHistory userTransaction={userTransaction}></ListHistory>
+        )}
+        {isLoading == false && routeHistoryPembeli == "detail" && (
+          <DetailTransaction />
         )}
       </div>
     </>

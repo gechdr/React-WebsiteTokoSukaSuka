@@ -1,14 +1,25 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Navbar from "./NavBar";
 import formatter from "./formatter";
 import { useForm } from "react-hook-form";
 import HistoryKasir from "./HistoryKasir";
+import { useDispatch, useSelector } from "react-redux";
+import { updateQty } from "../redux/barangSlice";
+import { updateStatus } from "../redux/transactionSlice";
+import { setRouteHistoryKasir, setRouteKasir } from "../redux/routeSlice";
 
 /* eslint-disable react/prop-types */
-function Kasir(props) {
-  const [routeKasir, setRouteKasir] = useState("home");
+function Kasir() {
   const [active, setActive] = useState(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
+
+  const routeKasir = useSelector((state) => state.route.routeKasir);
+  const id = useSelector((state) => state.route.id);
+  const items = useSelector((state) => state.barang.listBarang);
+  const transactions = useSelector(
+    (state) => state.transaction.listTransaction
+  );
+  const dispatch = useDispatch();
 
   const {
     register,
@@ -25,15 +36,28 @@ function Kasir(props) {
 
   const handleSearch = (data) => {
     setIsLoading(true);
-    let id = data.search.toUpperCase();
+    let searchId = data.search.toUpperCase();
 
     reset();
-    setActive(props.transaction.find((t) => t.id == id));
+    setActive(transactions.find((t) => t.id == searchId));
 
     setTimeout(() => {
       setIsLoading(false);
     }, 1000);
   };
+
+  useEffect(() => {
+    if (active != null) {
+      let searchId = active.id;
+      clear();
+      setActive(transactions.find((t) => t.id == searchId));
+
+      setTimeout(() => {
+        setIsLoading(false);
+      }, 1000);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [transactions]);
 
   const checkStock = () => {
     let warning = false;
@@ -42,7 +66,7 @@ function Kasir(props) {
     for (let i = 0; i < tempCart.length; i++) {
       const c = tempCart[i];
 
-      const item = props.barang.find((b) => b.id == c.id);
+      const item = items.find((b) => b.id == c.id);
       if (item.qty - c.qty < 0) {
         warning = true;
       }
@@ -56,67 +80,57 @@ function Kasir(props) {
   };
 
   const handleStatus = (action) => {
+    let updateStatusTransaction = [];
+    let updateBarang = [];
+
     if (action == "reject") {
       //Reject
-      let newData = [];
-
-      for (let i = 0; i < props.transaction.length; i++) {
-        let t = props.transaction[i];
+      for (let i = 0; i < transactions.length; i++) {
+        let t = transactions[i];
 
         if (t.id == active.id) {
-          t.status = "Rejected";
-          t.idKasir = props.id;
+          updateStatusTransaction.push({
+            id: t.id,
+            status: "Rejected",
+            idKasir: id,
+          });
         }
-
-        newData.push(t);
       }
 
-      props.setTransaction(newData);
+      dispatch(updateStatus(updateStatusTransaction));
     } else {
       //Confirm
-      let newData = [];
-      let newBarang = [];
-
-      for (let i = 0; i < props.transaction.length; i++) {
-        let t = props.transaction[i];
+      for (let i = 0; i < transactions.length; i++) {
+        let t = transactions[i];
 
         if (t.id == active.id) {
-          //Reject
-          t.status = "Confirm";
-          t.idKasir = props.id;
+          //Confirm
+          updateStatusTransaction.push({
+            id: t.id,
+            status: "Confirm",
+            idKasir: id,
+          });
+
+          dispatch(updateStatus(updateStatusTransaction));
 
           for (let j = 0; j < t.cart.length; j++) {
             const c = t.cart[j];
 
-            for (let k = 0; k < props.barang.length; k++) {
-              let b = props.barang[k];
-
-              if (b.id == c.id) {
-                b.qty -= c.qty;
-              }
-
-              newBarang.push(b);
-            }
+            updateBarang.push({
+              id: c.id,
+              qty: c.qty,
+            });
           }
         }
 
-        newData.push(t);
+        dispatch(updateQty(updateBarang));
       }
-
-      props.setBarang(newBarang);
-      props.setTransaction(newData);
     }
   };
 
   return (
     <>
-      <Navbar
-        users={props.users}
-        id={props.id}
-        setId={props.setId}
-        setRoute={props.setRoute}
-        setCart={props.setCart}
-      ></Navbar>
+      <Navbar></Navbar>
 
       {routeKasir == "home" && (
         <>
@@ -149,7 +163,8 @@ function Kasir(props) {
                 className="border-0 rounded-3 fs-4 w-25 mx-3 text-white py-1"
                 style={{ backgroundColor: "#7c2023" }}
                 onClick={() => {
-                  setRouteKasir("history");
+                  dispatch(setRouteKasir("history"));
+                  dispatch(setRouteHistoryKasir("list"));
                   clear();
                 }}
               >
@@ -235,13 +250,7 @@ function Kasir(props) {
         </>
       )}
 
-      {routeKasir == "history" && (
-        <HistoryKasir
-          id={props.id}
-          transaction={props.transaction}
-          setRouteKasir={setRouteKasir}
-        ></HistoryKasir>
-      )}
+      {routeKasir == "history" && <HistoryKasir></HistoryKasir>}
     </>
   );
 }

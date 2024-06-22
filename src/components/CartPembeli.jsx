@@ -4,28 +4,40 @@ import leftArrow from "../assets/left-arrow.png";
 import formatter from "./formatter";
 import check from "../assets/check.png";
 
+import { useDispatch, useSelector } from "react-redux";
+import { setCart } from "../redux/cartSlice";
+import { setRouteHistoryPembeli, setRoutePembeli } from "../redux/routeSlice";
+import { setTransaction } from "../redux/transactionSlice";
+
 /* eslint-disable react/prop-types */
-function CartPembeli(props) {
+function CartPembeli() {
   const [data, setData] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [totalBarang, setTotalBarang] = useState(0);
   const [totalHarga, setTotalHarga] = useState(0);
 
+  const id = useSelector((state) => state.route.id);
+  const carts = useSelector((state) => state.cart.listCart);
+  const transactions = useSelector(
+    (state) => state.transaction.listTransaction
+  );
+  const dispatch = useDispatch();
+
   useEffect(() => {
     let tempTotalBarang = 0;
     let tempTotalHarga = 0;
 
-    for (let i = 0; i < props.cart.length; i++) {
-      const data = props.cart[i];
+    for (let i = 0; i < carts.length; i++) {
+      const data = carts[i];
       tempTotalBarang += data.qty;
       tempTotalHarga += data.harga * data.qty;
     }
 
     // Set
-    setData(props.cart);
+    setData(carts);
     setTotalBarang(tempTotalBarang);
     setTotalHarga(tempTotalHarga);
-  }, [props.cart]);
+  }, [carts]);
 
   useEffect(() => {
     setIsLoading(true);
@@ -41,8 +53,8 @@ function CartPembeli(props) {
     // ID Transaction
     let newId = "TR001";
 
-    if (props.transaction.length > 0) {
-      let temp = props.transaction[props.transaction.length - 1].id;
+    if (transactions.length > 0) {
+      let temp = transactions[transactions.length - 1].id;
       let tempId = temp.substring(2);
       newId = "TR" + (parseInt(tempId) + 1).toString().padStart(3, "0");
     }
@@ -58,7 +70,7 @@ function CartPembeli(props) {
     const status = "Pending";
 
     // ID Pembeli
-    const idPembeli = props.id;
+    const idPembeli = id;
 
     // ID Kasir
     const idKasir = -1;
@@ -67,16 +79,16 @@ function CartPembeli(props) {
     const newData = {
       id: newId,
       date: currentDate,
-      cart: props.cart,
+      cart: carts,
       totalHarga: totalHarga,
       status: status,
       idPembeli: idPembeli,
       idKasir: idKasir,
     };
 
-    let tempTransaction = props.transaction;
-    props.setTransaction([...tempTransaction, newData]);
-    props.setCart([]);
+    let tempTransaction = transactions;
+    dispatch(setTransaction([...tempTransaction, newData]));
+    dispatch(setCart([]));
   };
 
   return (
@@ -89,14 +101,17 @@ function CartPembeli(props) {
           <button
             className="border-0 rounded-3 fs-4 w-25 mx-3 text-white py-1"
             style={{ backgroundColor: "#7c2023" }}
-            onClick={() => props.setRoutePembeli("list")}
+            onClick={() => dispatch(setRoutePembeli("list"))}
           >
             List
           </button>
           <button
             className="border-0 rounded-3 fs-4 w-25 mx-3 text-white py-1"
             style={{ backgroundColor: "#7c2023" }}
-            onClick={() => props.setRoutePembeli("history")}
+            onClick={() => {
+              dispatch(setRoutePembeli("history"));
+              dispatch(setRouteHistoryPembeli("list"));
+            }}
           >
             History
           </button>
@@ -118,15 +133,7 @@ function CartPembeli(props) {
             >
               {data.length > 0 &&
                 data.map((c) => (
-                  <CardKeranjang
-                    key={c.id}
-                    categories={props.categories}
-                    brands={props.brands}
-                    barang={props.barang}
-                    cart={props.cart}
-                    setCart={props.setCart}
-                    {...c}
-                  ></CardKeranjang>
+                  <CardKeranjang key={c.id} {...c}></CardKeranjang>
                 ))}
             </div>
             <div

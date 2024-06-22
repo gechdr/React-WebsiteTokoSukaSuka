@@ -1,10 +1,31 @@
 /* eslint-disable react/prop-types */
+import { useDispatch, useSelector } from "react-redux";
 import formatter from "./formatter";
+import {
+  setActive,
+  setRouteHistoryKasir,
+  setRouteHistoryPembeli,
+} from "../redux/routeSlice";
 
 function CardTransaction(props) {
+  const dispatch = useDispatch();
+  const route = useSelector((state) => state.route.route);
+
   return (
     <>
-      <div className="col border-0 w-25">
+      <button
+        className="col border-0 w-25 bg-transparent"
+        style={{ cursor: "pointer" }}
+        onClick={() => {
+          if (route == "PEMBELI") {
+            dispatch(setActive(props.id));
+            dispatch(setRouteHistoryPembeli("detail"));
+          } else if (route == "KASIR") {
+            dispatch(setActive(props.id));
+            dispatch(setRouteHistoryKasir("detail"));
+          }
+        }}
+      >
         <div className="card rounded-4 shadow h-100">
           <div className="card-body w-100 d-flex flex-column">
             <div className="d-flex w-100">
@@ -40,7 +61,7 @@ function CardTransaction(props) {
             </div>
           </div>
         </div>
-      </div>
+      </button>
     </>
   );
 }

@@ -2,13 +2,20 @@
 import { useEffect, useState } from "react";
 import CardBarang from "./CardBarang";
 import notFound from "../assets/notFound.png";
+import { useDispatch, useSelector } from "react-redux";
+import { setRouteHistoryPembeli, setRoutePembeli } from "../redux/routeSlice";
 
-function ListPembeli(props) {
+function ListPembeli() {
   const [filterCategory, setFilterCategory] = useState(-1);
   const [filterBrand, setFilterBrand] = useState(-1);
 
+  const items = useSelector((state) => state.barang.listBarang);
+  const categories = useSelector((state) => state.kategori.listKategori);
+  const brands = useSelector((state) => state.merk.listMerk);
+  const dispatch = useDispatch();
+
   const [isLoading, setIsLoading] = useState(true);
-  const [datas, setDatas] = useState(props.barang);
+  const [datas, setDatas] = useState(items);
 
   useEffect(() => {
     // Filter
@@ -16,7 +23,7 @@ function ListPembeli(props) {
     setDatas([]);
 
     if (filterCategory != -1) {
-      let temp = props.barang.filter((b) =>
+      let temp = items.filter((b) =>
         b.kategori.toString().includes(filterCategory)
       );
       if (filterBrand != -1) {
@@ -24,12 +31,12 @@ function ListPembeli(props) {
       }
       newBarang = [...temp];
     } else if (filterBrand != -1) {
-      let temp = props.barang.filter((b) => b.merk == filterBrand);
+      let temp = items.filter((b) => b.merk == filterBrand);
       newBarang = [...temp];
     }
 
     if (filterCategory == -1 && filterBrand == -1) {
-      setDatas(props.barang);
+      setDatas(items);
     } else {
       setDatas(newBarang);
     }
@@ -37,7 +44,7 @@ function ListPembeli(props) {
     setTimeout(() => {
       setIsLoading(false);
     }, [1000]);
-  }, [filterCategory, filterBrand, props.barang]);
+  }, [filterCategory, filterBrand, items]);
 
   return (
     <>
@@ -59,7 +66,7 @@ function ListPembeli(props) {
             <option key={-1} value={-1}>
               None
             </option>
-            {props.categories.map((c) => (
+            {categories.map((c) => (
               <option key={c.id} value={c.id}>
                 {c.nama}
               </option>
@@ -82,7 +89,7 @@ function ListPembeli(props) {
             <option key={-1} value={-1}>
               None
             </option>
-            {props.brands.map((b) => (
+            {brands.map((b) => (
               <option key={b.id} value={b.id}>
                 {b.nama}
               </option>
@@ -93,14 +100,17 @@ function ListPembeli(props) {
           <button
             className="border-0 rounded-3 fs-4 w-25 mx-3 text-white py-1"
             style={{ backgroundColor: "#7c2023" }}
-            onClick={() => props.setRoutePembeli("cart")}
+            onClick={() => dispatch(setRoutePembeli("cart"))}
           >
             Cart
           </button>
           <button
             className="border-0 rounded-3 fs-4 w-25 mx-3 text-white py-1"
             style={{ backgroundColor: "#7c2023" }}
-            onClick={() => props.setRoutePembeli("history")}
+            onClick={() => {
+              dispatch(setRoutePembeli("history"));
+              dispatch(setRouteHistoryPembeli("list"));
+            }}
           >
             History
           </button>
@@ -117,17 +127,7 @@ function ListPembeli(props) {
         {isLoading == false &&
           datas.length > 0 &&
           datas.map((b) => (
-            <CardBarang
-              key={b.id}
-              user="pembeli"
-              barang={props.barang}
-              setBarang={props.setBarang}
-              categories={props.categories}
-              brands={props.brands}
-              cart={props.cart}
-              setCart={props.setCart}
-              {...b}
-            ></CardBarang>
+            <CardBarang key={b.id} user="pembeli" {...b}></CardBarang>
           ))}
         {isLoading == false && datas.length <= 0 && (
           <div

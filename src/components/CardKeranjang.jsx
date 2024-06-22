@@ -3,9 +3,17 @@ import { useState } from "react";
 import add from "../assets/add.png";
 import minus from "../assets/minus.png";
 import formatter from "./formatter";
+import { useDispatch, useSelector } from "react-redux";
+import { updateCart } from "../redux/cartSlice";
 
 function CardKeranjang(props) {
   const [quantity, setQuantity] = useState(props.qty);
+
+  const items = useSelector((state) => state.barang.listBarang);
+  const categories = useSelector((state) => state.kategori.listKategori);
+  const brands = useSelector((state) => state.merk.listMerk);
+  const carts = useSelector((state) => state.cart.listCart);
+  const dispatch = useDispatch();
 
   const getCategories = (kategori) => {
     let categoriesArr = [];
@@ -13,12 +21,12 @@ function CardKeranjang(props) {
       for (let i = 0; i < kategori.length; i++) {
         const k = kategori[i];
 
-        const temp = props.categories.find((c) => c.id == k);
+        const temp = categories.find((c) => c.id == k);
 
         categoriesArr.push(temp.nama);
       }
     } else {
-      const temp = props.categories.find((c) => c.id == kategori);
+      const temp = categories.find((c) => c.id == kategori);
       categoriesArr.push(temp.nama);
     }
 
@@ -28,7 +36,7 @@ function CardKeranjang(props) {
   };
 
   const getBrands = (merk) => {
-    const brand = props.brands.find((b) => b.id == merk);
+    const brand = brands.find((b) => b.id == merk);
     return brand.nama;
   };
 
@@ -37,7 +45,7 @@ function CardKeranjang(props) {
     let q = quantity;
     q = q + 1;
 
-    let tempBarang = props.barang.find((b) => b.id == props.id);
+    let tempBarang = items.find((b) => b.id == props.id);
 
     if (q > tempBarang.qty) {
       q = tempBarang.qty;
@@ -59,31 +67,24 @@ function CardKeranjang(props) {
   };
 
   const updateData = (e) => {
-    let tempCart = props.cart;
-    let newCart = [];
-
+    let tempCart = carts;
+    
+    let updateQtyCart = [];
     for (let i = 0; i < tempCart.length; i++) {
       let c = tempCart[i];
 
       if (c.id == props.id) {
-        if (e == "+") {
-          c.qty += 1;
-
-          const b = props.barang.find((b) => b.id == c.id);
-          if (c.qty > b.qty) {
-            c.qty = b.qty;
-          }
-        } else {
-          c.qty -= 1;
-        }
-      }
-
-      if (c.qty > 0) {
-        newCart.push(c);
+        const b = items.find((b) => b.id == c.id);
+        updateQtyCart.push({
+          id: c.id,
+          qty: 1,
+          action: e,
+          max: b.qty,
+        });
       }
     }
 
-    props.setCart(newCart);
+    dispatch(updateCart(updateQtyCart));
   };
 
   return (

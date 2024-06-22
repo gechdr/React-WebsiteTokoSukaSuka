@@ -3,8 +3,13 @@ import "./style.css";
 import { useForm } from "react-hook-form";
 import Joi from "joi";
 import { joiResolver } from "@hookform/resolvers/joi";
+import { useDispatch, useSelector } from "react-redux";
+import { setRoute, setId } from "../redux/routeSlice";
 
-function Login({ users, setId, setRoute }) {
+function Login() {
+  const users = useSelector((state) => state.user.listUser);
+  const dispatch = useDispatch();
+
   const schema = Joi.object({
     username: Joi.string().required().messages({
       "string.empty": "*Field is Empty!",
@@ -27,7 +32,7 @@ function Login({ users, setId, setRoute }) {
     if (data.username.toLowerCase() == "admin") {
       if (data.password.toLowerCase() == "admin") {
         // Login Admin
-        setRoute("admin");
+        dispatch(setRoute("admin"));
       } else {
         setError("password", { type: "custom", message: "*Wrong Password!" });
       }
@@ -43,7 +48,7 @@ function Login({ users, setId, setRoute }) {
           // Found
           found = true;
           if (user.password == data.password) {
-            setId(user.id);
+            dispatch(setId(user.id));
             safe = true;
             break;
           }
@@ -52,7 +57,7 @@ function Login({ users, setId, setRoute }) {
 
       if (found && safe) {
         // Login
-        setRoute(user.role);
+        dispatch(setRoute(user.role));
       } else if (found) {
         // Wrong Password
         setError("password", { type: "custom", message: "*Wrong Password!" });

@@ -1,22 +1,32 @@
 /* eslint-disable react/prop-types */
 import { useEffect, useState } from "react";
 import ListHistory from "./ListHistory";
+import { useDispatch, useSelector } from "react-redux";
+import { setRouteKasir } from "../redux/routeSlice";
+import DetailTransaction from "./DetailTransaction";
 
-function HistoryKasir(props) {
+function HistoryKasir() {
   const [isLoading, setIsLoading] = useState(false);
   const [userTransaction, setUserTransaction] = useState([]);
+
+  const id = useSelector((state) => state.route.id);
+  const transactions = useSelector(
+    (state) => state.transaction.listTransaction
+  );
+  const routeHistoryKasir = useSelector(
+    (state) => state.route.routeHistoryKasir
+  );
+  const dispatch = useDispatch();
 
   useEffect(() => {
     setIsLoading(true);
 
-    setUserTransaction([
-      ...props.transaction.filter((t) => t.idKasir == props.id),
-    ]);
+    setUserTransaction([...transactions.filter((t) => t.idKasir == id)]);
 
     setTimeout(() => {
       setIsLoading(false);
     }, 1000);
-  }, [props.id, props.transaction]);
+  }, [id, transactions]);
 
   return (
     <>
@@ -26,7 +36,7 @@ function HistoryKasir(props) {
           <button
             className="border-0 rounded-3 fs-4 w-25 mx-3 text-white py-1"
             style={{ backgroundColor: "#7c2023" }}
-            onClick={() => props.setRouteKasir("home")}
+            onClick={() => dispatch(setRouteKasir("home"))}
           >
             Back
           </button>
@@ -41,8 +51,11 @@ function HistoryKasir(props) {
           </div>
         )}
 
-        {isLoading == false && (
+        {isLoading == false && routeHistoryKasir == "list" && (
           <ListHistory userTransaction={userTransaction}></ListHistory>
+        )}
+        {isLoading == false && routeHistoryKasir == "detail" && (
+          <DetailTransaction />
         )}
       </div>
     </>
